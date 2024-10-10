@@ -1,0 +1,11 @@
+buying,price,doors,safety,decision
+high,4,low,no
+high,5more,high,yes
+low,5more,high,yes
+low,5more,low,no
+low,4,med,yes
+low,4,high,yes
+med,4,high,no
+med,3,high,yes
+vhigh,3,med,no
+vhigh,5more,high,no
