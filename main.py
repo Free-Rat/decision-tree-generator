@@ -58,11 +58,6 @@ def entropy(y, a):
     if y == 0 or y == a: return 0
     return -(y/a * log2(y/a)) -((a-y)/a * log2((a-y)/a))
 
-def decision_to_int(decision):
-    return int(decision.lower() == "yes")
-    # return int(decision.lower() == "1")
-
-
 def transpose_matrix(matrix):
     return [list(row) for row in zip(*matrix)]
 
@@ -126,32 +121,34 @@ def get_dominant_decision(dictionary):
     # print(dictionary)
     return round(mean)
 
-def is_only_one_left(dictionary):
-    return len(dictionary.values()) == 1
-
-
 def subtree(data):
     # print("\nsubtree ")
     # print_matrix(transpose_matrix(data))
-    # print(data)
-    if len(data[-1]) == 2:
+    decisions = data[-1]
+    # print(decisions)
+    if len(set(decisions[1:])) == 1:
         return decision_to_int(data[-1][-1])
     choosen = choose_atribute(data)
-    if choosen[2] >= 1.0:
-        return get_dominant_decision(choosen[1]) 
-        
     branches = {}
+    # print(f"choosen {choosen[0]}")
     for n_data, name in zip(filrt_data_for_atribute(data, choosen),
                             choosen[1].keys()):
         # print("name of branch",name)
         # print(n_data)
         branches[name] = subtree(n_data)
         # print("branches", branches)
-        # print()
     return [choosen[0], branches]
 
+# def print_subtree(tree):
+
+def decision_to_int(decision):
+    # return int(decision.lower() == "yes")
+    return int(decision.lower() == "1")
+
 def main():
-    data = get_data_from_file('data.csv')
+    # data = get_data_from_file('data.csv')
+    data = get_data_from_file('titanic.csv')
+
     print_matrix(data)
     data = transpose_matrix(data)
     tree = subtree(data)
