@@ -1,7 +1,6 @@
 from math import log2
 import csv
 import graphviz
-import random
 
 print("Welcome to Decision Tree Generator")
 
@@ -167,7 +166,7 @@ def main():
     print(tree)
 
     graph = visualize_tree(tree)
-    graph.render('decision_tree', view=True)  # Save and open the generated image
+    graph.render('decision_tree', view=True)
 
 if __name__ == "__main__":
     main()
