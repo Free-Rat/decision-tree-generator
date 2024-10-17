@@ -3,7 +3,7 @@ import csv
 import graphviz
 import random
 
-print("Welcome to Decision Tree Generatro")
+print("Welcome to Decision Tree Generator")
 
 # zwraca słownik ktory ma strukture 
 # {
@@ -14,51 +14,41 @@ print("Welcome to Decision Tree Generatro")
 #     ]
 #     ...
 # }
-def count_atribure_values(atribute, decision):
-    atribute_dir = {}
-    for idx in range(1, len(atribute)):
-        if atribute[idx] not in atribute_dir:
-            atribute_dir[atribute[idx]] = [
+def count_attribute_values(attribute, decision):
+    attribute_dir = {}
+    for idx in range(1, len(attribute)):
+        if attribute[idx] not in attribute_dir:
+            attribute_dir[attribute[idx]] = [
                     decision_to_int(decision[idx]),
                     [idx]
             ]
         else:
-            atribute_dir[atribute[idx]][0] += decision_to_int(decision[idx])
-            atribute_dir[atribute[idx]][1] += [idx]
-    # print(atribute_dir)
-    return atribute_dir
+            attribute_dir[attribute[idx]][0] += decision_to_int(decision[idx])
+            attribute_dir[attribute[idx]][1] += [idx]
+    return attribute_dir
 
-def intrinsic_info(atribute_dir):
-    values = list(atribute_dir.values())
+# zwraca IntrinsicInfo dla danego atrybutu 
+def intrinsic_info(attribute_dir):
+    values = list(attribute_dir.values())
     res = 0
     all_vals_count = sum(len(sublist[1]) for sublist in values)
-    # print(all_vals_count)
     for val in values:
         a = len(val[1])/all_vals_count
-        # print(a)
         res -= a * log2(a)
-        # print(a * log2(a))
     return res
 
-
-def entropy_for_atribute(atribute_dir):
-    values = atribute_dir.values()
-    # print(values)
+# zwraca entropy dla danego atrybutu 
+def entropy_for_attribute(attribute_dir):
+    values = attribute_dir.values()
     all_vals_count = sum(len(sublist[1]) for sublist in values)
-    
-    entropy_for_atribute = 0
+    entropy_for_attribute = 0
     for val in values:
-        # print()
-        # print(len(val[1]), all_vals_count)
-        # print(entropy(val[0], len(val[1])))
-        entropy_for_atribute += (len(val[1])/all_vals_count) * entropy(val[0], len(val[1]))
-    # print(entropy_for_atribute)
-    return entropy_for_atribute
+        entropy_for_attribute += (len(val[1])/all_vals_count) * entropy(val[0], len(val[1]))
+    return entropy_for_attribute
 
 # y to jest ilość yes'ow 
 # a to ilość wszystkich pojawień się tej wartości 
 def entropy(y, a):
-    # print(y, a, (a-y))
     if y == 0 or y == a: return 0
     return -(y/a * log2(y/a)) -((a-y)/a * log2((a-y)/a))
 
@@ -77,39 +67,29 @@ def get_data_from_file(filename):
 def print_matrix(matrix):
     print(f"col:{len(matrix)} row:{len(matrix[0])}")
     for row in matrix:
-        # print(row)
         for val in row:
             print(val, end="\t")
         print("")
     print("\n")
 
-def choose_atribute(data):
-    best_atribute = (None, None, None)
-    bast_gain_ratio = 0
+def choose_attribute(data):
+    best_attribute = (None, None, None)
+    best_gain_ratio = 0
     for idx in range(0, len(data)-1):
-        # print(data[idx][0])
-        atribute_dir = count_atribure_values(data[idx], data[-1])
-        gain = 1 - entropy_for_atribute(atribute_dir)
-        # print(f"Gain for {data[idx][0]} {gain}")
-        info = intrinsic_info(atribute_dir)
-        # print(f"Intrinsic_info for {data[idx][0]} {info}")
-        # print(atribute_dir)
+        attribute_dir = count_attribute_values(data[idx], data[-1])
+        gain = 1 - entropy_for_attribute(attribute_dir)
+        info = intrinsic_info(attribute_dir)
         gain_ratio = gain / info
-        # print(f"gain ratio {gain_ratio}")
-        # print()
-        if gain_ratio > bast_gain_ratio:
-            bast_gain_ratio = gain_ratio
-            best_atribute = (data[idx][0], atribute_dir, gain_ratio)
-    # print(f"best atriburte {best_atribute[0]}\n{best_atribute[1]}")
-    return best_atribute
+        if gain_ratio > best_gain_ratio:
+            best_gain_ratio = gain_ratio
+            best_attribute = (data[idx][0], attribute_dir, gain_ratio)
+    return best_attribute
 
-def filrt_data_for_atribute(data, atribute):
-    data =  [row for row in data if row[0] != atribute[0] ]
+def filrt_data_for_attribute(data, attribute):
+    data =  [row for row in data if row[0] != attribute[0] ]
     data = transpose_matrix(data)
-    # print_matrix(data)
-    # print(atribute)
     data_set = []
-    for key, value in atribute[1].items():
+    for key, value in attribute[1].items():
         indices = value[1]
         new_data = [data[i] for i in indices]
         new_data.insert(0, data[0])
@@ -120,33 +100,18 @@ def filrt_data_for_atribute(data, atribute):
 def get_dominant_decision(dictionary):
     values = [v[0] for v in dictionary.values()]
     mean = sum(values) / len(values)
-    # print(values)
-    # print(dictionary)
     return round(mean)
 
 def subtree(data):
-    # print("\nsubtree ")
-    # print_matrix(transpose_matrix(data))
     decisions = data[-1]
-    # print(decisions)
     if len(set(decisions[1:])) == 1:
         return decision_to_int(data[-1][-1])
-    choosen = choose_atribute(data)
+    choosen = choose_attribute(data)
     branches = {}
-    # print(f"choosen {choosen[0]}")
-    for n_data, name in zip(filrt_data_for_atribute(data, choosen),
+    for n_data, name in zip(filrt_data_for_attribute(data, choosen),
                             choosen[1].keys()):
-        # print("name of branch",name)
-        # print(n_data)
         branches[name] = subtree(n_data)
-        # print("branches", branches)
     return [choosen[0], branches]
-
-# def print_subtree(tree):
-
-def decision_to_int(decision):
-    # return int(decision.lower() == "yes")
-    return int(decision.lower() == "1")
 
 def map_age_to_label(age):
     if age == 'Age': 
@@ -163,31 +128,27 @@ def map_age_to_label(age):
 
 def visualize_tree(tree, graph=None, parent=None, edge_name=None, node_suffix=0):
     if graph is None:
-        graph = graphviz.Digraph(format='png')  # Initialize graph if not provided
-
-    # First element in the list is always the attribute (node) name
+        graph = graphviz.Digraph(format='png')  
     if isinstance(tree, list):
-        node_name = tree[0] + f"_{node_suffix}" # Attribute name (e.g., 'Sex', 'Parch', etc.)
-        # Create the node for the current attribute
+        node_name = tree[0] + f"_{node_suffix}" 
         graph.node(node_name)
-        
-        # If there's a parent node, add an edge from the parent to the current node
+
         if parent is not None:
             graph.edge(parent, node_name, label=edge_name)
         
-        # The second element in the list is a dictionary containing branches
         for key, subtree in tree[1].items():
-            # Recursively call the function to visualize each subtree
             node_suffix += random.random() * 100 //1
             visualize_tree(subtree, graph=graph, parent=node_name, edge_name=key, node_suffix=node_suffix)
     else:
-        # Leaf nodes: When a final decision (e.g., 0 or 1) is reached
-        leaf_name = f'{tree}_{node_suffix}'  # Convert leaf node (e.g., 0 or 1) to string for graphviz
-        graph.node(leaf_name, shape='box')  # Display leaf nodes as boxes
-        graph.edge(parent, leaf_name, label= edge_name)  # Connect leaf to its parent decision node
+        leaf_name = f'{tree}_{node_suffix}'  
+        graph.node(leaf_name, shape='box')  
+        graph.edge(parent, leaf_name, label= edge_name)
 
-    print(tree)
     return graph
+
+def decision_to_int(decision):
+    # return int(decision.lower() == "yes")
+    return int(decision.lower() == "1")
 
 def main():
     # data = get_data_from_file('data.csv')
@@ -200,9 +161,8 @@ def main():
     data =  [row for row in data if row[0] != "Name"]
     print_matrix(transpose_matrix(data))
     
-
     tree = subtree(data)
-    print("\n\nTREE:")
+    print("\nTREE:\n")
     print(tree)
 
     graph = visualize_tree(tree)
@@ -210,5 +170,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
