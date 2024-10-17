@@ -126,22 +126,23 @@ def map_age_to_label(age):
     else:
         return 'unknown' 
 
-def visualize_tree(tree, graph=None, parent=None, edge_name=None, node_suffix=0):
+def visualize_tree(tree, graph=None, parent=None, edge_name=None, node_suffix=""):
     if graph is None:
         graph = graphviz.Digraph(format='png')  
     if isinstance(tree, list):
         node_name = tree[0] + f"_{node_suffix}" 
-        graph.node(node_name)
+        graph.node(node_name, label = f'{tree[0]}')
+        # graph.node(node_name)
 
         if parent is not None:
             graph.edge(parent, node_name, label=edge_name)
         
         for key, subtree in tree[1].items():
-            node_suffix += random.random() * 100 //1
+            node_suffix += f"{tree[0]}_{key}|"
             visualize_tree(subtree, graph=graph, parent=node_name, edge_name=key, node_suffix=node_suffix)
     else:
         leaf_name = f'{tree}_{node_suffix}'  
-        graph.node(leaf_name, shape='box')  
+        graph.node(leaf_name, shape='box', label = f'{tree}')  
         graph.edge(parent, leaf_name, label= edge_name)
 
     return graph
