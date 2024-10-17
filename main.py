@@ -1,4 +1,8 @@
 from math import log2
+import csv
+import graphviz
+import random
+
 print("Welcome to Decision Tree Generatro")
 
 # zwraca słownik ktory ma strukture 
@@ -64,11 +68,9 @@ def transpose_matrix(matrix):
 
 def get_data_from_file(filename):
     with open(filename, 'r') as file:
-        content = file.read()
-        rows = content.split("\n")
+        reader = csv.reader(file)
         data = []
-        for idx in range(len(rows)-1):
-            row = rows[idx].split(",")
+        for row in reader:
             data.append(row)
         return data
 
@@ -105,11 +107,12 @@ def filrt_data_for_atribute(data, atribute):
     data =  [row for row in data if row[0] != atribute[0] ]
     data = transpose_matrix(data)
     # print_matrix(data)
+    # print(atribute)
     data_set = []
-    for i in range(0, len(atribute[1])):
-        new_data = [data[i] for i in list(atribute[1].values())[i][1]]
+    for key, value in atribute[1].items():
+        indices = value[1]
+        new_data = [data[i] for i in indices]
         new_data.insert(0, data[0])
-        # print_matrix(new_data)
         new_data = transpose_matrix(new_data)
         data_set.append(new_data)
     return data_set
@@ -145,24 +148,65 @@ def decision_to_int(decision):
     # return int(decision.lower() == "yes")
     return int(decision.lower() == "1")
 
+def map_age_to_label(age):
+    if age == 'Age': 
+        return age
+    age = int(age)
+    if 0 <= age <= 20:
+        return 'young'
+    elif 20 < age <= 40:
+        return 'middle'
+    elif 40 < age <= 100:
+        return 'old'
+    else:
+        return 'unknown' 
+
+def visualize_tree(tree, graph=None, parent=None, edge_name=None, node_suffix=0):
+    if graph is None:
+        graph = graphviz.Digraph(format='png')  # Initialize graph if not provided
+
+    # First element in the list is always the attribute (node) name
+    if isinstance(tree, list):
+        node_name = tree[0] + f"_{node_suffix}" # Attribute name (e.g., 'Sex', 'Parch', etc.)
+        # Create the node for the current attribute
+        graph.node(node_name)
+        
+        # If there's a parent node, add an edge from the parent to the current node
+        if parent is not None:
+            graph.edge(parent, node_name, label=edge_name)
+        
+        # The second element in the list is a dictionary containing branches
+        for key, subtree in tree[1].items():
+            # Recursively call the function to visualize each subtree
+            node_suffix += random.random() * 100 //1
+            visualize_tree(subtree, graph=graph, parent=node_name, edge_name=key, node_suffix=node_suffix)
+    else:
+        # Leaf nodes: When a final decision (e.g., 0 or 1) is reached
+        leaf_name = f'{tree}_{node_suffix}'  # Convert leaf node (e.g., 0 or 1) to string for graphviz
+        graph.node(leaf_name, shape='box')  # Display leaf nodes as boxes
+        graph.edge(parent, leaf_name, label= edge_name)  # Connect leaf to its parent decision node
+
+    print(tree)
+    return graph
+
 def main():
     # data = get_data_from_file('data.csv')
     data = get_data_from_file('titanic.csv')
 
     print_matrix(data)
     data = transpose_matrix(data)
+    data[4] = [map_age_to_label(age) for age in data[4]]
+    data =  [row for row in data if row[0] != "PassengerId"]
+    data =  [row for row in data if row[0] != "Name"]
+    print_matrix(transpose_matrix(data))
+    
+
     tree = subtree(data)
     print("\n\nTREE:")
     print(tree)
-    
-    
-    exit()
-    best_a = choose_atribute(data)
-    new_data = filrt_data_for_atribute(data, best_a)
-    sec_best = choose_atribute(new_data)
-    new_data = filrt_data_for_atribute(new_data, sec_best)
-    third_best = choose_atribute(new_data)
 
+    graph = visualize_tree(tree)
+    graph.render('decision_tree', view=True)  # Save and open the generated image
 
 if __name__ == "__main__":
     main()
